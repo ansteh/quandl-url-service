@@ -1,0 +1,26 @@
+{
+  "name": "quandl-url-service",
+  "version": "0.0.0",
+  "description": "Quandl url service build upon useful lists: https://blog.quandl.com/useful-lists",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test"
+  },
+  "engines": {
+    "node": ">=4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ansteh/quandl-url-service.git"
+  },
+  "keywords": [],
+  "author": "Andre Stehle",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ansteh/quandl-url-service/issues"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {}
+}
