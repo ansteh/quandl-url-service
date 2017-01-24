@@ -4,42 +4,12 @@ const fs = require('fs');
 const csv = require('./lib/csv-parser.js');
 const urls = require('./lib/url-generator.js');
 const http = require('./lib/request.js');
-
-const loadFileContent = (filepath) => {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filepath, 'utf8', (err, content) => {
-      if(err) {
-        reject(err)
-      } else {
-        try {
-          resolve(content);
-        } catch(err) {
-          reject(err)
-        }
-      }
-    })
-  });
-}
-
-const writeFileContent = (filepath, data) => {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(filepath, data, 'utf8', (err) => {
-      if(err) {
-        reject(err)
-      } else {
-        try {
-          resolve(true);
-        } catch(err) {
-          reject(err)
-        }
-      }
-    })
-  });
-}
+const util = require('./lib/util.js');
 
 const getSP500 = () => {
-  return loadFileContent(`${__dirname}/resources/SP500.csv`)
-  .then(csv.jsonCSV);
+  return util.loadFileContent(`${__dirname}/resources/SP500.csv`)
+  .then(csv.jsonCSV)
+  .then(metas => _.filter(metas, meta => _.has(meta, 'ticker') && meta.ticker !== ''));
 };
 
 const requestStock = (metadata) => {
@@ -47,24 +17,53 @@ const requestStock = (metadata) => {
   return http.request(url);
 };
 
-const cacheStock = (data) => {
-  return writeFileContent(`${__dirname}/resources/cached/test.json`, data);
+const cacheStock = (data, metadata) => {
+  return util.writeFileContent(`${__dirname}/resources/cached/${metadata.ticker}.json`, data);
 }
 
 const timeoutRequestStock = (metas, delay) => {
   setTimeout(() => {
-    console.log('stock', metas.shift());
-    if(metas.length > 0) timeoutRequestStock(metas, delay);
+    let metadata = metas.shift();
+    // console.log('metadata', metadata);
+    // console.log('metas.length', metas.length);
+    requestStock(metadata)
+      .then(data => cacheStock(data, metadata))
+      .then(() => {
+        console.log('saved');
+        if(metas.length > 0) {
+          timeoutRequestStock(metas, delay);
+        } else {
+          console.log('all parsed!');
+        }
+      })
+      .catch((err) => {
+        console.log(err, metadata);
+      });
   }, delay);
 };
 
-const getAllFreeCodeStocksOfSP500 = (delay) => {
+const getAllFreeCodeStocksOfSP500 = (delay, startTicker) => {
   return getSP500()
     .then(metas => _.filter(metas, meta => _.has(meta, 'free_code')))
     .then((metas) => {
-      timeoutRequestStock(metas, delay);
+      if(startTicker) {
+        let index = _.findIndex(metas, { ticker: startTicker });
+        return _.slice(metas, index);
+      }
+      return metas;
     });
 };
 
-getAllFreeCodeStocksOfSP500(200)
-.catch(console.log)
+const cacheAllFreecodeStocksOfSP500 = (delay, startTicker) => {
+  return getAllFreeCodeStocksOfSP500(delay, startTicker)
+    // .then(metas => _.filter(metas, meta => _.includes(meta.ticker, '-')))
+    .then((metas) => {
+      console.log(metas.length);
+      timeoutRequestStock(metas, delay);
+    })
+    .catch(console.log);
+};
+
+// cacheAllFreecodeStocksOfSP500(200);
+
+// console.log(require('./resources/cached/CAT.json'));
