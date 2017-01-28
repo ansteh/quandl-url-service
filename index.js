@@ -67,3 +67,12 @@ const cacheAllFreecodeStocksOfSP500 = (delay, startTicker) => {
 // cacheAllFreecodeStocksOfSP500(200);
 
 // console.log(require('./resources/cached/CAT.json'));
+
+const stockMarket = require('./analysis.js');
+getSP500()
+  .then(stockMarket)
+  .then((stocks) => {
+    return stocks.getStock('FB');
+  })
+  .then(console.log)
+  .catch(console.log)
