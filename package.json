@@ -20,7 +20,9 @@
     "url": "https://github.com/ansteh/quandl-url-service/issues"
   },
   "dependencies": {
-    "lodash": "^4.17.4"
+    "bluebird": "^3.4.7",
+    "lodash": "^4.17.4",
+    "moment": "^2.17.1"
   },
   "devDependencies": {
     "got": "^6.7.1"
