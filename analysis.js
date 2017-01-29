@@ -6,14 +6,24 @@ const util = require('./lib/util.js');
 const Promise = require('bluebird');
 const moment = require('moment');
 
+const dateFormat = 'YYYY-MM-DD';
+
 const Stock = (stock) => {
-  let dataset = stock.dataset;
-  let data = _.reverse(dataset.data);
+  const dataset = stock.dataset;
+  const data = _.reverse(dataset.data);
+  const dates = _.map(data, set => set[0]);
+
+  // console.log(_.keys(dataset));
+  // console.log(dataset.column_names);
+  // console.log(_.first(data));
 
   const getIndicesOfNeedles = getNeedlesIndicesOfColumns(dataset.column_names);
-  // console.log(_.keys(dataset));
-  // console.log(_.keys(dataset));
-  // console.log(_.first(data));
+
+  const filter = (start, end) => {
+    let startIndex = _.findIndex(dates, date => date === start);
+    let endIndex = _.findIndex(dates, date => date === end);
+    return _.slice(data, startIndex, endIndex);
+  };
 
   const getData = (columns, start, end) => {
     let indices = getIndicesOfNeedles(columns);
@@ -62,11 +72,11 @@ const Stocks = (metas) => {
   };
 
   const getStarDates = (stocks) => {
-    return _.map(stocks, stock => moment(stock.getStartDate(), 'YYYY-MM-DD'));
+    return _.map(stocks, stock => moment(stock.getStartDate(), dateFormat));
   };
 
   const getEndDates = (stocks) => {
-    return _.map(stocks, stock => moment(stock.getEndDate(), 'YYYY-MM-DD'));
+    return _.map(stocks, stock => moment(stock.getEndDate(), dateFormat));
   };
 
   Promise.all(_.map(_.take(metas, 10), meta => getStock(meta.ticker)))
