@@ -72,7 +72,11 @@ const stockMarket = require('./analysis.js');
 getSP500()
   .then(stockMarket)
   .then((stocks) => {
-    return stocks.getStock('FB');
+    let stock =  stocks.getStock('AAPL');
+    return stock;
   })
-  .then(console.log)
+  .then((stock) => {
+    return stock.getData(['Date', 'Close', 'Ex-Dividend']);
+  })
+  // .then(console.log)
   .catch(console.log)
