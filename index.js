@@ -72,7 +72,7 @@ const stockMarket = require('./analysis.js');
 getSP500()
   .then(stockMarket)
   .then((stocks) => {
-    let stock =  stocks.getStock('AAPL');
+    let stock =  stocks.getStock({ ticker: 'AAPL' });
     return stock;
   })
   .then((stock) => {

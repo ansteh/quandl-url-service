@@ -8,7 +8,7 @@ const moment = require('moment');
 
 const dateFormat = 'YYYY-MM-DD';
 
-const Stock = (stock) => {
+const Stock = (meta, stock) => {
   const dataset = stock.dataset;
   const data = _.reverse(dataset.data);
   const dates = _.map(data, set => set[0]);
@@ -33,7 +33,7 @@ const Stock = (stock) => {
   };
 
   const getStartDate = () => {
-    console.log(dataset.start_date);
+    // console.log(dataset.start_date);
     return _.get(dataset, 'start_date');
   };
 
@@ -55,14 +55,15 @@ const getNeedlesIndicesOfColumns = _.curry((columns, needles) => {
 const Stocks = (metas) => {
   const cache = {};
 
-  const getStock = (ticker) => {
+  const getStock = (meta) => {
+    let ticker = meta.ticker;
     return new Promise((resolve, reject) => {
       if(_.has(cache, ticker)) {
         resolve(_.get(cache, ticker));
       } else {
         util.loadFileContent(`${__dirname}/resources/cached/${ticker}.json`)
           .then((jsonStr) => {
-            let stock = Stock(JSON.parse(jsonStr));
+            let stock = Stock(meta, JSON.parse(jsonStr));
             _.set(cache, ticker, stock);
             resolve(stock);
           })
@@ -79,14 +80,22 @@ const Stocks = (metas) => {
     return _.map(stocks, stock => moment(stock.getEndDate(), dateFormat));
   };
 
-  Promise.all(_.map(_.take(metas, 10), meta => getStock(meta.ticker)))
+  let data = _.take(metas, 10);
+  data = metas;
+  Promise.all(_.map(data, meta => getStock(meta)))
   .then(function() {
     console.log("all the files were created");
     let stocks = _.values(cache);
     let startDates = getStarDates(stocks);
     let endDates = getEndDates(stocks);
-    console.log(_.max(startDates));
-    console.log(_.min(endDates));
+    console.log('slice start:', _.max(startDates));
+    console.log('slice end:',_.min(endDates));
+
+    let dates = _.chain(startDates)
+      .sortBy(x => x)
+      .value();
+    console.log(dates);
+
   });
 
   return {
