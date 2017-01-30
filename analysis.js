@@ -80,6 +80,12 @@ const Stocks = (metas) => {
     return _.map(stocks, stock => moment(stock.getEndDate(), dateFormat));
   };
 
+  const getStocksSortedByStartDateDesc = (stocks) => {
+    return _.chain(stocks)
+      .sortBy(stock => moment(stock.getStartDate(), dateFormat))
+      value();
+  };
+
   let data = _.take(metas, 10);
   data = metas;
   Promise.all(_.map(data, meta => getStock(meta)))
@@ -89,13 +95,14 @@ const Stocks = (metas) => {
     let startDates = getStarDates(stocks);
     let endDates = getEndDates(stocks);
     console.log('slice start:', _.max(startDates));
-    console.log('slice end:',_.min(endDates));
+    console.log('slice end:', _.min(endDates));
 
-    let dates = _.chain(startDates)
-      .sortBy(x => x)
-      .value();
-    console.log(dates);
+    // let dates = _.chain(startDates)
+    //   .sortBy(x => x)
+    //   .value();
+    // console.log(dates);
 
+    console.log(getStocksSortedByStartDateDesc(data));
   });
 
   return {
