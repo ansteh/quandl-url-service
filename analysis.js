@@ -40,7 +40,7 @@ const Stock = (meta, stock) => {
   const getEndDate = () => {
     return _.get(dataset, 'end_date');
   };
-
+  
   return {
     getData,
     getStartDate,
@@ -86,24 +86,30 @@ const Stocks = (metas) => {
       value();
   };
 
-  let data = _.take(metas, 10);
-  data = metas;
-  Promise.all(_.map(data, meta => getStock(meta)))
-  .then(function() {
-    console.log("all the files were created");
-    let stocks = _.values(cache);
-    let startDates = getStarDates(stocks);
-    let endDates = getEndDates(stocks);
-    console.log('slice start:', _.max(startDates));
-    console.log('slice end:', _.min(endDates));
+  getStock({ ticker: 'MMM' })
+  .then(console.log)
+  .catch(console.log);
 
-    // let dates = _.chain(startDates)
-    //   .sortBy(x => x)
-    //   .value();
-    // console.log(dates);
+  const test = () => {
+    let data = _.take(metas, 10);
+    data = metas;
+    Promise.all(_.map(data, meta => getStock(meta)))
+    .then(function() {
+      console.log("all the files were created");
+      let stocks = _.values(cache);
+      let startDates = getStarDates(stocks);
+      let endDates = getEndDates(stocks);
+      console.log('slice start:', _.max(startDates));
+      console.log('slice end:', _.min(endDates));
 
-    console.log(getStocksSortedByStartDateDesc(data));
-  });
+      // let dates = _.chain(startDates)
+      //   .sortBy(x => x)
+      //   .value();
+      // console.log(dates);
+
+      console.log(getStocksSortedByStartDateDesc(data));
+    });
+  };
 
   return {
     getStock
