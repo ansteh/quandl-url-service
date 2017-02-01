@@ -40,11 +40,28 @@ const Stock = (meta, stock) => {
   const getEndDate = () => {
     return _.get(dataset, 'end_date');
   };
-  
+
+  const getDates = () => {
+    return dates;
+  };
+
+  const getRowByDate = (date) => {
+    let index = _.findIndex(dates, x => x === date);
+    if(index > -1) return data[index];
+  };
+
+  const getCloseByDate = (date) => {
+    // let row = getRowByDate()
+    // if(getRowByDate(date)) console.log(_.get(getRowByDate(date), '4'));
+    return _.get(getRowByDate(date), '4');
+  };
+
   return {
     getData,
+    getDates,
     getStartDate,
-    getEndDate
+    getEndDate,
+    getCloseByDate
   };
 };
 
@@ -72,6 +89,10 @@ const Stocks = (metas) => {
     });
   };
 
+  const getStocks = (stocks) => {
+    return Promise.all(_.map(stocks, getStock));
+  };
+
   const getStarDates = (stocks) => {
     return _.map(stocks, stock => moment(stock.getStartDate(), dateFormat));
   };
@@ -86,15 +107,48 @@ const Stocks = (metas) => {
       value();
   };
 
-  getStock({ ticker: 'MMM' })
-  .then(console.log)
-  .catch(console.log);
+  const getStocksByMetas = (limit = metas.length) => {
+    return getStocks(_.take(metas, limit));
+  }
+
+  const calculateIndex = (stocks) => {
+    let dates = getUniqueDates(stocks);
+    return _.map(dates, (date) => {
+      return _.chain(stocks)
+        .map(stock => stock.getCloseByDate(date))
+        .filter(_.isNumber)
+        .sum()
+        .value();
+    });
+  };
+
+  const getUniqueDates = (stocks) => {
+    return _.chain(stocks)
+      .map(stock => stock.getDates())
+      .flatten()
+      .uniq()
+      .sortBy(date => moment(date, dateFormat))
+      .value();
+  };
+
+  const countDates = (stocks) => {
+    return _.chain(stocks)
+      .map(stock => stock.getDates())
+      .flatten()
+      .groupBy()
+      .map(group => group.length)
+      .value();
+  };
+
+  const getStockTest = () => {
+    return getStock({ ticker: 'MMM' })
+      .then(console.log)
+      .catch(console.log);
+  }
 
   const test = () => {
-    let data = _.take(metas, 10);
-    data = metas;
-    Promise.all(_.map(data, meta => getStock(meta)))
-    .then(function() {
+    return getStocksByMetas()
+    .then((data) => {
       console.log("all the files were created");
       let stocks = _.values(cache);
       let startDates = getStarDates(stocks);
@@ -110,6 +164,32 @@ const Stocks = (metas) => {
       console.log(getStocksSortedByStartDateDesc(data));
     });
   };
+
+  const testGetUniqueDates = () => {
+    return getStocksByMetas(10)
+    .then(getUniqueDates)
+    .then(console.log)
+    .catch(console.log);
+  };
+
+  const testCountDates = () => {
+    return getStocksByMetas(10)
+    .then(countDates)
+    .then(console.log)
+    .catch(console.log);
+  };
+
+  const testCalculateIndex = () => {
+    return getStocksByMetas(10)
+    .then(calculateIndex)
+    .then(index => _.slice(index, -10))
+    .then(console.log)
+    .catch(console.log);
+  };
+
+  // testGetUniqueDates();
+  // testCountDates();
+  testCalculateIndex();
 
   return {
     getStock
