@@ -56,12 +56,19 @@ const Stock = (meta, stock) => {
     return _.get(getRowByDate(date), '4');
   };
 
+  const durationInDays = () => {
+    let start = moment(getStartDate());
+    let end = moment(getEndDate());
+    return moment.duration(end.diff(start)).asDays();
+  }
+
   return {
     getData,
     getDates,
     getStartDate,
     getEndDate,
-    getCloseByDate
+    getCloseByDate,
+    durationInDays
   };
 };
 
@@ -140,6 +147,18 @@ const Stocks = (metas) => {
       .value();
   };
 
+  const getDurationsInDays = (stocks, delimiter) => {
+    return _.chain(stocks)
+      .map((stock) =>  {
+        return {
+          stock,
+          duration: stock.durationInDays(delimiter)
+        };
+      })
+      .sortBy('duration')
+      .value();
+  };
+
   const getStockTest = () => {
     return getStock({ ticker: 'MMM' })
       .then(console.log)
@@ -187,9 +206,46 @@ const Stocks = (metas) => {
     .catch(console.log);
   };
 
+  const testGetDurationsInDays = () => {
+    return getStocksByMetas(10)
+    .then(getDurationsInDays)
+    .then(infos => _.map(infos, 'duration'))
+    .then(console.log)
+    .catch(console.log);
+  };
+
+  const median = (series) => {
+    if(series.length % 2) {
+      return series[(series.length+1)/2 - 1];
+    } else {
+      if(series.length > 1) {
+        let fix = (series.length)/2 - 1;
+        return (series[fix] + series[fix+1])/2;
+      }
+      return _.first(series);
+    }
+  };
+
+  // console.log(median([1,2,7,8]));
+  // console.log(median([1,2,5,7,8]));
+
+  const testbed = () => {
+    let stocks;
+    return getStocksByMetas()
+    .then((instances) => { stocks = instances; return stocks; })
+    .then(getDurationsInDays)
+    .then(infos => _.map(infos, 'duration'))
+    .then(median)
+    .then(console.log)
+    .catch(console.log);
+  };
+
+  testbed();
+
   // testGetUniqueDates();
   // testCountDates();
-  testCalculateIndex();
+  // testCalculateIndex();
+  // testGetDurationsInDays();
 
   return {
     getStock
