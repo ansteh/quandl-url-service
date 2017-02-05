@@ -33,7 +33,6 @@ const Stock = (meta, stock) => {
   };
 
   const getStartDate = () => {
-    // console.log(dataset.start_date);
     return _.get(dataset, 'start_date');
   };
 
@@ -51,8 +50,6 @@ const Stock = (meta, stock) => {
   };
 
   const getCloseByDate = (date) => {
-    // let row = getRowByDate()
-    // if(getRowByDate(date)) console.log(_.get(getRowByDate(date), '4'));
     return _.get(getRowByDate(date), '4');
   };
 
@@ -62,13 +59,25 @@ const Stock = (meta, stock) => {
     return moment.duration(end.diff(start)).asDays();
   }
 
+  const findIndexOfDate = (date) => {
+    return _.findIndex(dates, x => x === date);
+  }
+
+  const fitCloseDataBy = (datesToFit) => {
+    return _.map(datesToFit, (date) => {
+      let index = findIndexOfDate(date);
+      return _.get(data, `${index}.4`, 0);
+    });
+  }
+
   return {
     getData,
     getDates,
     getStartDate,
     getEndDate,
     getCloseByDate,
-    durationInDays
+    durationInDays,
+    fitCloseDataBy
   };
 };
 
@@ -165,6 +174,23 @@ const Stocks = (metas) => {
       .catch(console.log);
   }
 
+  const median = (series) => {
+    if(series.length % 2) {
+      return series[(series.length+1)/2 - 1];
+    } else {
+      if(series.length > 1) {
+        let fix = (series.length)/2 - 1;
+        return (series[fix] + series[fix+1])/2;
+      }
+      return _.first(series);
+    }
+  };
+
+  const createCube = (stocks) => {
+    let dates = getUniqueDates(stocks);
+    return _.map(stocks, stock => stock.fitCloseDataBy(dates));
+  }
+
   const test = () => {
     return getStocksByMetas()
     .then((data) => {
@@ -185,7 +211,7 @@ const Stocks = (metas) => {
   };
 
   const testGetUniqueDates = () => {
-    return getStocksByMetas(10)
+    return getStocksByMetas()
     .then(getUniqueDates)
     .then(console.log)
     .catch(console.log);
@@ -214,20 +240,28 @@ const Stocks = (metas) => {
     .catch(console.log);
   };
 
-  const median = (series) => {
-    if(series.length % 2) {
-      return series[(series.length+1)/2 - 1];
-    } else {
-      if(series.length > 1) {
-        let fix = (series.length)/2 - 1;
-        return (series[fix] + series[fix+1])/2;
-      }
-      return _.first(series);
-    }
+  // return getStocksByMetas(1)
+  // .then((stocks) => {
+  //   let dates = getUniqueDates(stocks);
+  //   let stock = _.first(stocks);
+  //   return _.uniq(stock.fitCloseDataBy(dates));
+  // })
+  // .then(console.log)
+  // .catch(console.log);
+
+  const testCreateCube = () => {
+    return getStocksByMetas(10)
+    .then(createCube)
+    .then(matrix => _.uniq(_.flatten(matrix)))
+    .then(console.log)
+    .catch(console.log);
   };
 
-  // console.log(median([1,2,7,8]));
-  // console.log(median([1,2,5,7,8]));
+  testGetUniqueDates();
+  // testCountDates();
+  // testCalculateIndex();
+  // testGetDurationsInDays();
+  // testCreateCube();
 
   const testbed = () => {
     let stocks;
@@ -240,12 +274,7 @@ const Stocks = (metas) => {
     .catch(console.log);
   };
 
-  testbed();
-
-  // testGetUniqueDates();
-  // testCountDates();
-  // testCalculateIndex();
-  // testGetDurationsInDays();
+  // testbed();
 
   return {
     getStock
