@@ -110,10 +110,21 @@ const loadSP500Market = () => {
   .then(stockMarket);
 }
 
+const getUncrawledStockMetas = (cube, market) => {
+  let crawledTickers = _.map(cube.tickers, 'ticker');
+  let metas = market.getMetas();
+  return _.filter(metas, (meta) => {
+    return _.includes(crawledTickers, meta.ticker) === false;
+  });
+}
+
 const crawlSP500Index = () => {
   return Promise.all([loadStockCube(), loadSP500Market()])
   .then(([cube, market]) => {
-    console.log(cube, market);
+    let metas = getUncrawledStockMetas(cube, market);
+    // _.forEach(metas, (meta) => {
+    //
+    // });
   })
   .then(console.log)
   .catch(console.log);

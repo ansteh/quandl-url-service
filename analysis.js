@@ -191,6 +191,10 @@ const Stocks = (metas) => {
     return _.map(stocks, stock => stock.fitCloseDataBy(dates));
   }
 
+  const getMetas = () => {
+    return metas;
+  }
+
   const test = () => {
     return getStocksByMetas()
     .then((data) => {
@@ -279,7 +283,8 @@ const Stocks = (metas) => {
   return {
     getStock,
     getStocksByMetas,
-    getUniqueDates
+    getUniqueDates,
+    getMetas
   };
 };
 
