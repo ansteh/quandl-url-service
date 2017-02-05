@@ -257,7 +257,7 @@ const Stocks = (metas) => {
     .catch(console.log);
   };
 
-  testGetUniqueDates();
+  // testGetUniqueDates();
   // testCountDates();
   // testCalculateIndex();
   // testGetDurationsInDays();
@@ -277,7 +277,9 @@ const Stocks = (metas) => {
   // testbed();
 
   return {
-    getStock
+    getStock,
+    getStocksByMetas,
+    getUniqueDates
   };
 };
 

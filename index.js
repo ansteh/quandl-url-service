@@ -5,6 +5,8 @@ const csv = require('./lib/csv-parser.js');
 const urls = require('./lib/url-generator.js');
 const http = require('./lib/request.js');
 const util = require('./lib/util.js');
+const casher = require('./lib/casher.js');
+const Promise = require('bluebird');
 
 const getSP500 = () => {
   return util.loadFileContent(`${__dirname}/resources/SP500.csv`)
@@ -69,7 +71,9 @@ const cacheAllFreecodeStocksOfSP500 = (delay, startTicker) => {
 // console.log(require('./resources/cached/CAT.json'));
 
 const stockMarket = require('./analysis.js');
-getSP500()
+
+const testStockGetData = () => {
+  return getSP500()
   .then(stockMarket)
   .then((stocks) => {
     let stock =  stocks.getStock({ ticker: 'AAPL' });
@@ -78,5 +82,41 @@ getSP500()
   .then((stock) => {
     return stock.getData(['Date', 'Close', 'Ex-Dividend']);
   })
-  // .then(console.log)
-  .catch(console.log)
+  .then(console.log)
+  .catch(console.log);
+}
+
+const createStockCubeFile = () => {
+  let market;
+  return getSP500()
+  .then(stockMarket)
+  .then(instance => market = instance)
+  .then(() => market.getStocksByMetas())
+  .then(stocks => market.getUniqueDates(stocks))
+  .then(dates => casher.createStockCubeFile(`${__dirname}/resources/aggregation/SP500/index.json`, dates))
+  .then(console.log)
+  .catch(console.log);
+}
+
+// createStockCubeFile();
+
+const loadStockCube = () => {
+  return util.loadFileContent(`${__dirname}/resources/aggregation/SP500/index.json`)
+  .then(JSON.parse);
+}
+
+const loadSP500Market = () => {
+  return getSP500()
+  .then(stockMarket);
+}
+
+const crawlSP500Index = () => {
+  return Promise.all([loadStockCube(), loadSP500Market()])
+  .then(([cube, market]) => {
+    console.log(cube, market);
+  })
+  .then(console.log)
+  .catch(console.log);
+}
+
+crawlSP500Index();
