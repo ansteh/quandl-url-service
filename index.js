@@ -119,15 +119,37 @@ const getUncrawledStockMetas = (cube, market) => {
 }
 
 const crawlSP500Index = () => {
+  let allDates, market;
   return Promise.all([loadStockCube(), loadSP500Market()])
-  .then(([cube, market]) => {
+  .then(([cube, marketInstance]) => {
+    market = marketInstance;
     let metas = getUncrawledStockMetas(cube, market);
-    // _.forEach(metas, (meta) => {
-    //
-    // });
+    metas = _.take(metas, 10);
+    return Promise.all(_.map(metas, meta => market.getStock(meta)));
   })
+  .then((stocks) => {
+    allDates = market.getUniqueDates(stocks);
+    console.log('allDates.length', allDates.length);
+    return stocks;
+  })
+  .then((stocks) => {
+    return _.map(stocks, stock => stock.fitCloseDataBy(allDates));
+  })
+  .then((dataset) => {
+    // return _.sum(_.map(dataset, _.sum));
+    let range = _.range(dataset.length);
+    return _.map(allDates, (date, index) => {
+      return _.sum(_.map(range, slot => dataset[slot][index]));
+    });
+  })
+  .then(index => _.slice(index, -10))
   .then(console.log)
   .catch(console.log);
 }
 
 crawlSP500Index();
+
+// getSP500()
+// .then(stockMarket)
+// .then(console.log)
+// .catch(console.log);
