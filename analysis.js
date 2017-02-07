@@ -71,6 +71,7 @@ const Stock = (meta, stock) => {
   }
 
   return {
+    meta,
     getData,
     getDates,
     getStartDate,
