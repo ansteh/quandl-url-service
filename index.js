@@ -126,7 +126,7 @@ const crawlSP500Index = () => {
   .then(([cube, marketInstance]) => {
     market = marketInstance;
     let metas = getUncrawledStockMetas(cube, market);
-    metas = _.take(metas, 10);
+    // metas = _.take(metas, 10);
     return Promise.all(_.map(metas, meta => market.getStock(meta)));
   })
   .then((stocks) => {
@@ -135,100 +135,70 @@ const crawlSP500Index = () => {
     return stocks;
   })
   .then((stocks) => {
-    return new Promise((resolve, reject) => {
-      async.parallel(_.map(stocks, (stock) => {
-        return (callback) => {
-          let values = stock.fitCloseDataBy(allDates);
-          console.log(stock.meta.ticker);
-          callback(null, values);
-        };
-      }), (err, dataset) => {
-        // console.log(dataset.length);
-        if(err) {
-          reject(err)
-        } else {
-          resolve(dataset);
-        }
-      });
-    });
-
-    // let dataset = _.map(stocks, stock => {
-    //   let values = stock.fitCloseDataBy(allDates);
-    //   console.log(stock.meta.ticker);
-    //   return values;
+    // return new Promise((resolve, reject) => {
+    //   async.parallel(_.map(stocks, (stock) => {
+    //     return (callback) => {
+    //       let values = stock.fitCloseDataBy(allDates);
+    //       console.log(stock.meta.ticker);
+    //       callback(null, values);
+    //     };
+    //   }), (err, dataset) => {
+    //     // console.log(dataset.length);
+    //     if(err) {
+    //       reject(err)
+    //     } else {
+    //       resolve(dataset);
+    //     }
+    //   });
     // });
-    // return Promise.all(dataset);
+
+    let dataset = _.map(stocks, stock => {
+      let values = stock.fitCloseDataBy(allDates);
+      console.log(stock.meta.ticker);
+      return values;
+    });
+    return Promise.all(dataset);
   })
   .then((dataset) => {
-    // return _.sum(_.map(dataset, _.sum));
-    let range = _.range(dataset.length);
-    return _.map(allDates, (date, index) => {
-      return _.sum(_.map(range, slot => dataset[slot][index]));
-    });
+    return { dates: allDates, dataset };
   })
-  .then(index => _.slice(index, -10))
+  .then((json) => {
+    let content = JSON.stringify(json);
+    return util.writeFileContent(`${__dirname}/resources/aggregation/SP500/index.json`, content);
+  })
+  // .then((dataset) => {
+  //   // return _.sum(_.map(dataset, _.sum));
+  //   let range = _.range(dataset.length);
+  //   return _.map(allDates, (date, index) => {
+  //     return _.sum(_.map(range, slot => dataset[slot][index]));
+  //   });
+  // })
+  // .then(index => _.slice(index, -10))
   .then(console.log)
   .catch(console.log);
 }
 
-crawlSP500Index();
+// crawlSP500Index();
 
 // getSP500()
 // .then(stockMarket)
 // .then(console.log)
 // .catch(console.log);
 
-const perfTestbed = () => {
-  let data = _.times(3000000, () => {
-    return {
-      name: 'it',
-      salary: _.random(100)
-    }
+const testSP500Index = () => {
+  return util.loadFileContent(`${__dirname}/resources/aggregation/SP500/index.json`)
+  .then(JSON.parse)
+  .then(({ dates, dataset }) => {
+    return _.map(dates, (date, index) => {
+      return _.chain(dataset)
+        .map(index)
+        .sum()
+        .value();
+    });
   });
-
-  let start = new Date();
-
-  // let sum = data.filter((item) => {
-  // 	return item.name == "it"
-  // })
-  // .map((curr) => {
-  // 	return curr.salary;
-  // })
-  // .reduce(function(prev, curr){
-  // 	return prev + curr;
-  // });
-
-  let sum = data.reduce((sum, item) => {
-    return item.name === 'it' ? sum+item.salary : sum;
-  }, 0);
-
-  let end = new Date();
-  console.log("Native: Finished iterating, took: "+ (end-start) +" Sum "+sum);
-
-  sum = 0;
-  start = new Date();
-  end = new Date();
-
-  async.each(data, function(item, cb) {
-  	if (item.name == "it")
-  		sum += item.salary;
-  	cb();
-  }, function(err) {
-      end =+ new Date();
-      var diff = end - start; // time difference in milliseconds
-      console.log("async: Finished iterating, took: "+diff + " Sum "+sum);
-  });
-
-  sum = 0;
-  start = new Date();
-  end = new Date();
-
-  sum = _.reduce(data, (sum, item) => {
-    return item.name === 'it' ? sum+item.salary : sum;
-  }, 0);
-
-  end = new Date();
-  console.log("lodash: Finished iterating, took: "+ (end-start) +" Sum "+sum);
 }
 
-// perfTestbed();
+testSP500Index()
+.then(index => _.slice(index, -10))
+.then(console.log)
+.catch(console.log);

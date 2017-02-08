@@ -13,6 +13,10 @@ const Stock = (meta, stock) => {
   const data = _.reverse(dataset.data);
   const dates = _.map(data, set => set[0]);
 
+  const mapping = {};
+   _.forEach(data, (set, index) => {
+    mapping[dates[index]] = set;
+  });
   // console.log(_.keys(dataset));
   // console.log(dataset.column_names);
   // console.log(_.first(data));
@@ -45,8 +49,9 @@ const Stock = (meta, stock) => {
   };
 
   const getRowByDate = (date) => {
-    let index = _.findIndex(dates, x => x === date);
-    if(index > -1) return data[index];
+    // let index = _.findIndex(dates, x => x === date);
+    // if(index > -1) return data[index];
+    return mapping[date];
   };
 
   const getCloseByDate = (date) => {
@@ -65,8 +70,8 @@ const Stock = (meta, stock) => {
 
   const fitCloseDataBy = (datesToFit) => {
     return _.map(datesToFit, (date) => {
-      let index = findIndexOfDate(date);
-      return _.get(data, `${index}.4`, 0);
+      let set = getRowByDate(date);
+      return _.get(set, '4', 0);
     });
   }
 
