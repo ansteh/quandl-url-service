@@ -56,3 +56,29 @@ const perfTestbed = () => {
 }
 
 perfTestbed();
+
+// return new Promise((resolve, reject) => {
+//   async.parallel(_.map(stocks, (stock) => {
+//     return (callback) => {
+//       let values = stock.fitCloseDataBy(allDates);
+//       console.log(stock.meta.ticker);
+//       callback(null, values);
+//     };
+//   }), (err, dataset) => {
+//     // console.log(dataset.length);
+//     if(err) {
+//       reject(err)
+//     } else {
+//       resolve(dataset);
+//     }
+//   });
+// });
+
+// .then((dataset) => {
+//   // return _.sum(_.map(dataset, _.sum));
+//   let range = _.range(dataset.length);
+//   return _.map(allDates, (date, index) => {
+//     return _.sum(_.map(range, slot => dataset[slot][index]));
+//   });
+// })
+// .then(index => _.slice(index, -10))

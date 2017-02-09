@@ -49,8 +49,6 @@ const Stock = (meta, stock) => {
   };
 
   const getRowByDate = (date) => {
-    // let index = _.findIndex(dates, x => x === date);
-    // if(index > -1) return data[index];
     return mapping[date];
   };
 
@@ -64,10 +62,6 @@ const Stock = (meta, stock) => {
     return moment.duration(end.diff(start)).asDays();
   }
 
-  const findIndexOfDate = (date) => {
-    return _.findIndex(dates, x => x === date);
-  }
-
   const fitCloseDataBy = (datesToFit) => {
     return _.map(datesToFit, (date) => {
       let set = getRowByDate(date);
@@ -75,15 +69,25 @@ const Stock = (meta, stock) => {
     });
   }
 
+  const getValuesOfColumnByDates = (name, dates) => {
+    let indices = getIndicesOfNeedles([name]);
+    let index = _.first(indices);
+    return _.map(dates, (date) => {
+      let set = getRowByDate(date);
+      return _.get(set, index, 0);
+    });
+  }
+
   return {
-    meta,
+    durationInDays,
+    fitCloseDataBy,
+    getCloseByDate,
     getData,
     getDates,
-    getStartDate,
     getEndDate,
-    getCloseByDate,
-    durationInDays,
-    fitCloseDataBy
+    getStartDate,
+    getValuesOfColumnByDates,
+    meta
   };
 };
 

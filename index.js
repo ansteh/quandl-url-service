@@ -120,8 +120,9 @@ const getUncrawledStockMetas = (cube, market) => {
   });
 }
 
-const crawlSP500Index = () => {
+const crawlSP500Index = ({ column, filename }) => {
   let allDates, market;
+
   return Promise.all([loadStockCube(), loadSP500Market()])
   .then(([cube, marketInstance]) => {
     market = marketInstance;
@@ -134,26 +135,12 @@ const crawlSP500Index = () => {
     console.log('allDates.length', allDates.length);
     return stocks;
   })
+  // .then((stocks) => {
+  //   return Promise.all(_.map(targets, target => saveAggregationFile(_.assign(target, { stocks, dates: allDates }))));
+  // })
   .then((stocks) => {
-    // return new Promise((resolve, reject) => {
-    //   async.parallel(_.map(stocks, (stock) => {
-    //     return (callback) => {
-    //       let values = stock.fitCloseDataBy(allDates);
-    //       console.log(stock.meta.ticker);
-    //       callback(null, values);
-    //     };
-    //   }), (err, dataset) => {
-    //     // console.log(dataset.length);
-    //     if(err) {
-    //       reject(err)
-    //     } else {
-    //       resolve(dataset);
-    //     }
-    //   });
-    // });
-
     let dataset = _.map(stocks, stock => {
-      let values = stock.fitCloseDataBy(allDates);
+      let values = stock.getValuesOfColumnByDates(column, allDates);
       console.log(stock.meta.ticker);
       return values;
     });
@@ -164,29 +151,46 @@ const crawlSP500Index = () => {
   })
   .then((json) => {
     let content = JSON.stringify(json);
-    return util.writeFileContent(`${__dirname}/resources/aggregation/SP500/index.json`, content);
+    return util.writeFileContent(`${__dirname}/resources/aggregation/SP500/${filename}.json`, content);
   })
-  // .then((dataset) => {
-  //   // return _.sum(_.map(dataset, _.sum));
-  //   let range = _.range(dataset.length);
-  //   return _.map(allDates, (date, index) => {
-  //     return _.sum(_.map(range, slot => dataset[slot][index]));
-  //   });
-  // })
-  // .then(index => _.slice(index, -10))
   .then(console.log)
   .catch(console.log);
 }
 
-// crawlSP500Index();
+const saveAggregationFile = ({ stocks, dates, column, filename }) => {
+  let dataset = _.map(stocks, stock => {
+    let values = stock.getValuesOfColumnByDates(column, dates);
+    console.log(stock.meta.ticker);
+    return values;
+  });
 
-// getSP500()
-// .then(stockMarket)
+  return Promise.all(dataset).then((dataset) => {
+    return { dates, dataset };
+  })
+  .then((json) => {
+    let content = JSON.stringify(json);
+    return util.writeFileContent(`${__dirname}/resources/aggregation/SP500/${filename}.json`, content);
+  })
+}
+
+let targets = {
+  // date: { column: 'Date', index: 0, filename: 'date' },
+  open: { column: 'Open', index: 1, filename: 'open' },
+  high: { column: 'High', index: 2, filename: 'high' },
+  low: { column: 'Low', index: 3, filename: 'low' },
+  close: { column: 'Close', index: 4, filename: 'close' },
+  volume:  { column: 'Volume', index: 5, filename: 'volume' }
+};
+
+crawlSP500Index(targets.volume);
+
+// loadSP500Market()
+// .then(stocks => stocks.getStock({ ticker: 'FB' }))
 // .then(console.log)
 // .catch(console.log);
 
-const testSP500Index = () => {
-  return util.loadFileContent(`${__dirname}/resources/aggregation/SP500/index.json`)
+const testSP500AggregationFile = (filename) => {
+  return util.loadFileContent(`${__dirname}/resources/aggregation/SP500/${filename}.json`)
   .then(JSON.parse)
   .then(({ dates, dataset }) => {
     return _.map(dates, (date, index) => {
@@ -198,7 +202,12 @@ const testSP500Index = () => {
   });
 }
 
-testSP500Index()
+testSP500AggregationFile('close')
 .then(index => _.slice(index, -10))
 .then(console.log)
 .catch(console.log);
+
+// Promise.all(_.map(_.keys(targets), testSP500AggregationFile))
+// .then(indices => _.map(indices, index => _.slice(index, -10)))
+// .then(console.log)
+// .catch(console.log);
