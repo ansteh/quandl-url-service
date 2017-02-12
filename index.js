@@ -202,10 +202,10 @@ const testSP500AggregationFile = (filename) => {
   });
 }
 
-testSP500AggregationFile('close')
-.then(index => _.slice(index, -10))
-.then(console.log)
-.catch(console.log);
+// testSP500AggregationFile('close')
+// .then(index => _.slice(index, -10))
+// .then(console.log)
+// .catch(console.log);
 
 // Promise.all(_.map(_.keys(targets), testSP500AggregationFile))
 // .then(indices => _.map(indices, index => _.slice(index, -10)))
